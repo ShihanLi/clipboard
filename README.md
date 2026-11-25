@@ -8,11 +8,11 @@ A tiny macOS clipboard history that lives behind the shortcut you already use.
 ## Features
 
 - Remembers your last 50 copies — text (including rich text) and images
-- Saved locally, survives restarts; copying something again moves it to the top instead of duplicating it
+- History is kept in memory only — it is never written to disk and is cleared when you quit; copying something again moves it to the top instead of duplicating it
 - Skips passwords and other items password managers mark as secret ([nspasteboard.org](http://nspasteboard.org) markers)
 - Keyboard friendly popup: ↑/↓ + Return, or 1–9 for the first nine items; Esc or click outside to close
 - Menu bar icon with Clear History, Launch at Login, and Quit — no Dock icon
-- No dependencies, no network access, ~700 lines of Swift
+- No dependencies, no network access, ~600 lines of Swift
 
 ## Install
 
@@ -51,7 +51,7 @@ This builds `Clipboard.app`, copies it to `/Applications`, and launches it. Gran
 | --- | --- |
 | `Sources/KeyTap.swift` | A `CGEventTap` that swallows ⌘V. Released before the threshold → posts a normal ⌘V; held past it → opens the popup. |
 | `Sources/PasteboardMonitor.swift` | Polls `NSPasteboard` for changes and records new text/images. |
-| `Sources/History.swift` | Stores history in `~/Library/Application Support/Clipboard/` (JSON + PNGs). |
+| `Sources/History.swift` | Keeps history in memory only (never written to disk). |
 | `Sources/Popup.swift` | A non-activating floating panel, so the app you're pasting into keeps focus. |
 | `Sources/main.swift` | App setup, menu bar, and pasting a chosen item. |
 
@@ -68,7 +68,7 @@ Tweak the hold length with `holdThreshold` in `KeyTap.swift`, or the history siz
 Quit from the menu bar icon, then:
 
 ```sh
-rm -rf /Applications/Clipboard.app ~/Library/Application\ Support/Clipboard
+rm -rf /Applications/Clipboard.app
 ```
 
 ## License

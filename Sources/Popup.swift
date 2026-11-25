@@ -197,7 +197,7 @@ final class PopupController {
         } else {
             for (index, item) in items.enumerated() {
                 let height: CGFloat = item.kind == .image ? 64 : 30
-                let row = RowView(index: index, item: item, image: store.image(for: item), width: rowWidth, height: height)
+                let row = RowView(index: index, item: item, image: item.image, width: rowWidth, height: height)
                 row.frame.origin = NSPoint(x: padding, y: y)
                 row.onClick = { [weak self] in self?.choose(index) }
                 row.onHover = { [weak self] in self?.select(index) }

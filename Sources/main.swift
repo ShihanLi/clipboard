@@ -32,7 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             if let rtf = item.rtf { pasteboard.setData(rtf, forType: .rtf) }
             pasteboard.setString(item.text ?? "", forType: .string)
         case .image:
-            guard let data = store.imageData(for: item) else { return }
+            guard let data = item.png else { return }
             pasteboard.setData(data, forType: .png)
             if let tiff = NSImage(data: data)?.tiffRepresentation {
                 pasteboard.setData(tiff, forType: .tiff)
