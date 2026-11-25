@@ -9,6 +9,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 swiftc -O -swift-version 5 -target arm64-apple-macos13.0 \
   Sources/*.swift -o "$APP/Contents/MacOS/Clipboard"
 cp Info.plist "$APP/Contents/Info.plist"
+cp AppIcon.icns "$APP/Contents/Resources/"
 
 # Sign with a stable identity so the Accessibility permission survives rebuilds.
 IDENTITY=$(security find-identity -v -p codesigning | awk -F'"' '/Apple Development/{print $2; exit}')
