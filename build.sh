@@ -5,7 +5,8 @@ cd "$(dirname "$0")"
 APP=build/Clipboard.app
 rm -rf build
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos13.0" \
+# Apple Silicon only.
+swiftc -O -swift-version 5 -target arm64-apple-macos13.0 \
   Sources/*.swift -o "$APP/Contents/MacOS/Clipboard"
 cp Info.plist "$APP/Contents/Info.plist"
 

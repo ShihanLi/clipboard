@@ -16,7 +16,20 @@ A tiny macOS clipboard history that lives behind the shortcut you already use.
 
 ## Install
 
-Requires macOS 13 or later and Xcode (or the Xcode Command Line Tools).
+Requires a Mac with Apple Silicon (M1 or later) running macOS 13 or later.
+
+### Download
+
+1. Download the `.dmg` from the [latest release](https://github.com/ShihanLi/clipboard/releases/latest).
+2. Open it and drag **Clipboard** into **Applications**.
+3. Launch Clipboard from Applications. It's signed and notarized by Apple, so it opens without security warnings.
+
+Then grant permission: **System Settings → Privacy & Security → Accessibility → turn on Clipboard**.
+It's needed to intercept ⌘V and to paste on your behalf. The app starts working within a couple of seconds of granting it.
+
+### Build from source
+
+Requires Xcode (or the Xcode Command Line Tools).
 
 ```sh
 git clone https://github.com/ShihanLi/clipboard.git
@@ -24,12 +37,13 @@ cd clipboard
 ./build.sh --install
 ```
 
-This builds `Clipboard.app`, copies it to `/Applications`, and launches it.
-
-Then grant permission: **System Settings → Privacy & Security → Accessibility → turn on Clipboard**.
-It's needed to intercept ⌘V and to paste on your behalf. The app starts working within a couple of seconds of granting it.
+This builds `Clipboard.app`, copies it to `/Applications`, and launches it. Grant Accessibility permission as above.
 
 > **Note:** If you have an Apple Development certificate in your keychain, the build is signed with it and the permission persists across rebuilds. Otherwise the app is ad-hoc signed and macOS may ask you to re-grant Accessibility after each rebuild (remove the old entry and add it again).
+
+### Making a release
+
+`./release.sh` builds, signs with a Developer ID certificate, notarizes, and staples `build/Clipboard-<version>.dmg` (or a `.pkg` with `--pkg`). See the comments at the top of the script for the one-time setup. Bump `CFBundleShortVersionString` in `Info.plist` before each release.
 
 ## How it works
 
