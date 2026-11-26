@@ -73,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             hint.isEnabled = false
             menu.addItem(hint)
         } else {
-            menu.addItem(item("Grant Accessibility Permission…", #selector(openAccessibilitySettings)))
+            menu.addItem(item("Grant Accessibility Permission…", #selector(requestAccessibility)))
         }
         menu.addItem(.separator())
 
@@ -91,11 +91,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return menuItem
     }
 
-    @objc private func openAccessibilitySettings() {
-        // Asking again re-adds the app to the list if its entry was removed.
+    /// Shows the system permission dialog, whose button opens the right Settings page.
+    /// Asking also re-adds the app to the Accessibility list if its entry was removed.
+    @objc private func requestAccessibility() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(options)
-        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
 
     @objc private func clearHistory() {
