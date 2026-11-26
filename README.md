@@ -43,7 +43,7 @@ This builds `Clipboard.app`, copies it to `/Applications`, and launches it. Gran
 
 ### Making a release
 
-`./release.sh` builds, signs with a Developer ID certificate, notarizes, and staples `build/Clipboard-<version>.dmg` (or a `.pkg` with `--pkg`). See the comments at the top of the script for the one-time setup. Bump `CFBundleShortVersionString` in `Info.plist` before each release.
+`./release.sh` builds, signs with a Developer ID certificate, notarizes, and staples `build/Clipboard-<version>.dmg`. See the comments at the top of the script for the one-time setup. Bump `CFBundleShortVersionString` in `Info.plist` before each release.
 
 ## How it works
 

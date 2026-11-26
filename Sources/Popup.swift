@@ -6,7 +6,6 @@ private final class PopupPanel: NSPanel {
         super.init(contentRect: .zero,
                    styleMask: [.nonactivatingPanel, .borderless],
                    backing: .buffered, defer: true)
-        isFloatingPanel = true
         level = .popUpMenu
         backgroundColor = .clear
         isOpaque = false
@@ -15,7 +14,6 @@ private final class PopupPanel: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
     }
     override var canBecomeKey: Bool { false }
-    override var canBecomeMain: Bool { false }
 }
 
 private final class FlippedView: NSView {
@@ -31,7 +29,7 @@ private final class RowView: NSView {
     private let textLabel = NSTextField(labelWithString: "")
     private var trackingArea: NSTrackingArea?
 
-    init(index: Int, item: ClipItem, image: NSImage?, width: CGFloat, height: CGFloat) {
+    init(index: Int, item: ClipItem, width: CGFloat, height: CGFloat) {
         super.init(frame: NSRect(x: 0, y: 0, width: width, height: height))
         wantsLayer = true
         layer?.cornerRadius = 6
@@ -44,7 +42,8 @@ private final class RowView: NSView {
 
         let contentX: CGFloat = 28
         let contentWidth = width - contentX - 10
-        if item.kind == .image, let image {
+        switch item {
+        case let .image(_, image):
             let imageView = NSImageView(frame: NSRect(x: contentX, y: 5, width: contentWidth, height: height - 10))
             imageView.image = image
             imageView.imageScaling = .scaleProportionallyDown
@@ -55,8 +54,7 @@ private final class RowView: NSView {
             textLabel.alignment = .right
             textLabel.frame = NSRect(x: contentX, y: 4, width: contentWidth, height: 14)
             addSubview(textLabel)
-        } else {
-            let raw = item.text ?? ""
+        case let .text(raw, _):
             let collapsed = raw.prefix(300)
                 .components(separatedBy: .whitespacesAndNewlines)
                 .filter { !$0.isEmpty }
@@ -102,7 +100,6 @@ final class PopupController {
     private var rows: [RowView] = []
     private var items: [ClipItem] = []
     private var selected = 0
-    private var scrollView: NSScrollView?
     private var clickMonitor: Any?
 
     private let width: CGFloat = 360
@@ -196,8 +193,9 @@ final class PopupController {
             y = 46
         } else {
             for (index, item) in items.enumerated() {
-                let height: CGFloat = item.kind == .image ? 64 : 30
-                let row = RowView(index: index, item: item, image: item.image, width: rowWidth, height: height)
+                var height: CGFloat = 30
+                if case .image = item { height = 64 }
+                let row = RowView(index: index, item: item, width: rowWidth, height: height)
                 row.frame.origin = NSPoint(x: padding, y: y)
                 row.onClick = { [weak self] in self?.choose(index) }
                 row.onHover = { [weak self] in self?.select(index) }
@@ -219,7 +217,6 @@ final class PopupController {
         scroll.scrollerStyle = .overlay
         scroll.documentView = document
         scroll.contentView.scroll(to: .zero)
-        scrollView = scroll
 
         background.frame = scroll.frame
         background.addSubview(scroll)

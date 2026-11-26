@@ -1,16 +1,18 @@
 import AppKit
-import CryptoKit
 
 /// One entry in the clipboard history.
-struct ClipItem {
-    enum Kind { case text, image }
+enum ClipItem {
+    case text(String, rtf: Data?)
+    case image(png: Data, NSImage)
 
-    var kind: Kind
-    var text: String?
-    var rtf: Data?
-    var png: Data?
-    var image: NSImage?
-    var hash: String
+    /// Two items are the same copy if their text or image bytes match.
+    func isSame(as other: ClipItem) -> Bool {
+        switch (self, other) {
+        case let (.text(a, _), .text(b, _)): return a == b
+        case let (.image(a, _), .image(b, _)): return a == b
+        default: return false
+        }
+    }
 }
 
 /// Keeps the most recent clipboard items in memory only.
@@ -20,39 +22,14 @@ final class HistoryStore {
 
     private(set) var items: [ClipItem] = []
 
-    func addText(_ text: String, rtf: Data?) {
-        let hash = Self.sha(Data(("t:" + text).utf8))
-        if moveToTop(hash: hash) { return }
-        insert(ClipItem(kind: .text, text: text, rtf: rtf, hash: hash))
-    }
-
-    func addImage(png: Data) {
-        let hash = Self.sha(png)
-        if moveToTop(hash: hash) { return }
-        insert(ClipItem(kind: .image, png: png, image: NSImage(data: png), hash: hash))
-    }
-
-    /// Moves an existing item to the top of the list.
-    func promote(_ item: ClipItem) {
-        _ = moveToTop(hash: item.hash)
-    }
-
-    func clear() {
-        items.removeAll()
-    }
-
-    private func moveToTop(hash: String) -> Bool {
-        guard let index = items.firstIndex(where: { $0.hash == hash }) else { return false }
-        items.insert(items.remove(at: index), at: 0)
-        return true
-    }
-
-    private func insert(_ item: ClipItem) {
+    /// Puts an item at the top, moving it there if it's already in the history.
+    func add(_ item: ClipItem) {
+        items.removeAll { $0.isSame(as: item) }
         items.insert(item, at: 0)
         if items.count > Self.maxItems { items.removeLast(items.count - Self.maxItems) }
     }
 
-    private static func sha(_ data: Data) -> String {
-        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    func clear() {
+        items.removeAll()
     }
 }

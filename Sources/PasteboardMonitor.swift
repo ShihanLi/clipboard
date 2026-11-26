@@ -51,16 +51,15 @@ final class PasteboardMonitor {
 
         if let text = pasteboard.string(forType: .string),
            !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            store.addText(text, rtf: pasteboard.data(forType: .rtf))
+            store.add(.text(text, rtf: pasteboard.data(forType: .rtf)))
             return
         }
 
-        if let png = pasteboard.data(forType: .png) {
-            store.addImage(png: png)
-        } else if let tiff = pasteboard.data(forType: .tiff),
-                  let rep = NSBitmapImageRep(data: tiff),
-                  let png = rep.representation(using: .png, properties: [:]) {
-            store.addImage(png: png)
+        let png = pasteboard.data(forType: .png) ?? pasteboard.data(forType: .tiff).flatMap {
+            NSBitmapImageRep(data: $0)?.representation(using: .png, properties: [:])
+        }
+        if let png, let image = NSImage(data: png) {
+            store.add(.image(png: png, image))
         }
     }
 }

@@ -27,19 +27,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func paste(_ item: ClipItem) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        switch item.kind {
-        case .text:
-            if let rtf = item.rtf { pasteboard.setData(rtf, forType: .rtf) }
-            pasteboard.setString(item.text ?? "", forType: .string)
-        case .image:
-            guard let data = item.png else { return }
-            pasteboard.setData(data, forType: .png)
-            if let tiff = NSImage(data: data)?.tiffRepresentation {
-                pasteboard.setData(tiff, forType: .tiff)
-            }
+        switch item {
+        case let .text(text, rtf):
+            if let rtf { pasteboard.setData(rtf, forType: .rtf) }
+            pasteboard.setString(text, forType: .string)
+        case let .image(png, image):
+            pasteboard.setData(png, forType: .png)
+            if let tiff = image.tiffRepresentation { pasteboard.setData(tiff, forType: .tiff) }
         }
         monitor.ignoreCurrentContents()
-        store.promote(item)
+        store.add(item)
 
         // Give the popup a moment to disappear before sending the keystroke.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { KeyTap.postPaste() }
@@ -49,17 +46,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private func startKeyTap() {
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        let trusted = AXIsProcessTrustedWithOptions(options)
-        if trusted && keyTap.start() {
-            updateMenu()
-            return
-        }
-        updateMenu()
+        if AXIsProcessTrustedWithOptions(options) && keyTap.start() { return }
         // Keep checking until the user grants permission in System Settings.
         permissionTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] timer in
             guard let self, AXIsProcessTrusted(), self.keyTap.start() else { return }
             timer.invalidate()
-            self.updateMenu()
         }
     }
 
@@ -71,13 +62,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let menu = NSMenu()
         menu.delegate = self
         statusItem.menu = menu
-        updateMenu()
     }
 
-    func menuNeedsUpdate(_ menu: NSMenu) { updateMenu() }
-
-    private func updateMenu() {
-        guard let menu = statusItem?.menu else { return }
+    /// Rebuilds the menu each time it opens, so it always reflects the current state.
+    func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
 
         if keyTap.isRunning {
@@ -87,9 +75,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         } else {
             menu.addItem(item("Grant Accessibility Permission…", #selector(openAccessibilitySettings)))
         }
-        let count = NSMenuItem(title: "\(store.items.count) of \(HistoryStore.maxItems) items saved", action: nil, keyEquivalent: "")
-        count.isEnabled = false
-        menu.addItem(count)
         menu.addItem(.separator())
 
         menu.addItem(item("Clear History", #selector(clearHistory)))
@@ -107,6 +92,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     @objc private func openAccessibilitySettings() {
+        // Asking again re-adds the app to the list if its entry was removed.
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
 
